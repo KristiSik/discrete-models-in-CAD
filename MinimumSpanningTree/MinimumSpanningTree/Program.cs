@@ -1,16 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MinimumSpanningTree
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-
+            Graph graph = new Graph();
+            graph.ReadFromFile("1.dat");
+            graph.PrintNodes();
+            graph.FindMinimumSpanningTree();
+            graph.FindMaximumSpanningTree();
+            Console.ReadKey();
         }
     }
 }
