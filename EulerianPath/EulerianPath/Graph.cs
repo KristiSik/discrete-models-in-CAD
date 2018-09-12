@@ -212,10 +212,8 @@ namespace EulerianPath
             {
                 unitedCycles.Add(edgeFromFirstCycle);
                 if (united) continue;
-                if (edgeFromFirstCycle.StartNode == secondCycle.First().StartNode ||
-                    edgeFromFirstCycle.StartNode == secondCycle.First().EndNode ||
-                    edgeFromFirstCycle.EndNode == secondCycle.First().StartNode ||
-                    edgeFromFirstCycle.EndNode == secondCycle.First().EndNode)
+                if (edgeFromFirstCycle.StartNode == secondCycle.First().EndNode ||
+                    edgeFromFirstCycle.EndNode == secondCycle.First().StartNode)
                 {
                     foreach (var edgeFromSecondCycle in secondCycle)
                     {
@@ -225,16 +223,26 @@ namespace EulerianPath
                     united = true;
                 }
             }
-
             return unitedCycles;
         }
         private Edge FindNextEdge(Node currentNode)
         {
             var bestNodeName = UnusedEdges.FindAll(e => e.StartNode == currentNode || e.EndNode == currentNode)
                 .Min(e => (e.StartNode == currentNode) ? e.EndNode.Name : e.StartNode.Name);
-            return UnusedEdges.FirstOrDefault(e => (e.StartNode == currentNode && e.EndNode.Name == bestNodeName) || (e.EndNode == currentNode && e.StartNode.Name == bestNodeName));
+            Edge bestEdge = UnusedEdges.FirstOrDefault(e => (e.StartNode == currentNode && e.EndNode.Name == bestNodeName) || (e.EndNode == currentNode && e.StartNode.Name == bestNodeName));
+            bestEdge = FixEdgeDirection(bestEdge, currentNode);
+            return bestEdge;
         }
 
+        private Edge FixEdgeDirection(Edge edge, Node startNode)
+        {
+            if (edge.StartNode != startNode)
+            {
+                edge.EndNode = edge.StartNode;
+                edge.StartNode = startNode;
+            }
+            return edge;
+        }
         private void MakeAdjacencyMatrix()
         {
             AdjacencyMatrix = new int[Nodes.Count][];
