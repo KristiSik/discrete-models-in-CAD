@@ -13,6 +13,8 @@ namespace EulerianPath
     {
         public List<Node> Nodes { get; set; }
         public List<Edge> Edges { get; set; }
+        public List<Edge> UnusedEdges { get; set; }
+        public List<Edge> UsedEdges { get; set; }
         public Graph()
         {
             Nodes = new List<Node>();
@@ -96,16 +98,24 @@ namespace EulerianPath
                 }
             });
         }
-
         public void FindEulerianPath()
         {
             if (!IsEvenDegree())
             {
                 Console.WriteLine("Graph has vertex with odd degree");
             }
-
+            UsedEdges = new List<Edge>();
+            UnusedEdges = new List<Edge>(Edges);
+            //starting from first node in Nodes list
+            var startingEdge = Nodes.First().InEdges.Count > 0 ? Nodes.First().InEdges.First() : Nodes.First().OutEdges.First();
+            List<Edge> united = new List<Edge>();
+            united.AddRange(FindCycle(Nodes.First()));
+            while (UnusedEdges.Count > 0)
+            {
+                united = UniteCycles(united, FindCycle(UnusedEdges.First().StartNode));
+            }
+            united.ForEach(u => Console.WriteLine($"{u.StartNode.Name}, {u.EndNode.Name}"));
         }
-
         private bool IsEvenDegree()
         {
             foreach (var node in Nodes)
@@ -116,6 +126,53 @@ namespace EulerianPath
                 }
             }
             return true;
+        }
+
+        private List<Edge> FindCycle(Node startingNode)
+        {
+            List<Edge> cycle = new List<Edge>();
+            Edge nextEdge;
+            Node lastNode = startingNode;
+            do
+            {
+                nextEdge = FindNextEdge(lastNode);
+                cycle.Add(nextEdge);
+                UnusedEdges.RemoveAll(ue => ue.Number == nextEdge.Number);
+                UsedEdges.Add(nextEdge);
+                lastNode = lastNode == nextEdge.StartNode ? nextEdge.EndNode : nextEdge.StartNode;
+            } while (lastNode != startingNode);
+            return cycle;
+        }
+
+        private List<Edge> UniteCycles(List<Edge> firstCycle, List<Edge> secondCycle)
+        {
+            List<Edge> unitedCycles = new List<Edge>();
+            bool united = false;
+            foreach (var edgeFromFirstCycle in firstCycle)
+            {
+                unitedCycles.Add(edgeFromFirstCycle);
+                if (united) continue;
+                if (edgeFromFirstCycle.StartNode == secondCycle.First().StartNode ||
+                    edgeFromFirstCycle.StartNode == secondCycle.First().EndNode ||
+                    edgeFromFirstCycle.EndNode == secondCycle.First().StartNode ||
+                    edgeFromFirstCycle.EndNode == secondCycle.First().EndNode)
+                {
+                    foreach (var edgeFromSecondCycle in secondCycle)
+                    {
+                        unitedCycles.Add(edgeFromSecondCycle);
+                    }
+
+                    united = true;
+                }
+            }
+
+            return unitedCycles;
+        }
+        private Edge FindNextEdge(Node currentNode)
+        {
+            var bestNodeName = UnusedEdges.FindAll(e => e.StartNode == currentNode || e.EndNode == currentNode)
+                .Min(e => (e.StartNode == currentNode) ? e.EndNode.Name : e.StartNode.Name);
+            return UnusedEdges.FirstOrDefault(e => (e.StartNode == currentNode && e.EndNode.Name == bestNodeName) || (e.EndNode == currentNode && e.StartNode.Name == bestNodeName));
         }
     }
 }
