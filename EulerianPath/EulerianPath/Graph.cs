@@ -15,6 +15,7 @@ namespace EulerianPath
         public List<Edge> Edges { get; set; }
         public List<Edge> UnusedEdges { get; set; }
         public List<Edge> UsedEdges { get; set; }
+        public int[][] AdjacencyMatrix { get; set; }
         public Graph()
         {
             Nodes = new List<Node>();
@@ -98,11 +99,27 @@ namespace EulerianPath
                 }
             });
         }
+
+        //private List<Edge> FindPair()
+        //{
+
+        //}
         public void FindEulerianPath()
         {
             if (!IsEvenDegree())
             {
                 Console.WriteLine("Graph has vertex with odd degree");
+                MakeAdjacencyMatrix();
+                FindMinimumDistances();
+                var oddDegreeNodes = Nodes.FindAll(n => (n.InEdges.Count + n.OutEdges.Count) % 2 != 0);
+                List<Edge> oddEdges = new List<Edge>();
+                for(int i = 0; i < oddDegreeNodes.Count - 1; i++)
+                {
+                    for (int j = i + 1; j < oddDegreeNodes.Count; j++)
+                    {
+                        oddEdges.Add(new Edge() { StartNode = oddDegreeNodes[i], EndNode = oddDegreeNodes[j], Weight = AdjacencyMatrix[Nodes.IndexOf(oddDegreeNodes[i])][Nodes.IndexOf(oddDegreeNodes[j])]});
+                    }
+                }
             }
             UsedEdges = new List<Edge>();
             UnusedEdges = new List<Edge>(Edges);
@@ -173,6 +190,46 @@ namespace EulerianPath
             var bestNodeName = UnusedEdges.FindAll(e => e.StartNode == currentNode || e.EndNode == currentNode)
                 .Min(e => (e.StartNode == currentNode) ? e.EndNode.Name : e.StartNode.Name);
             return UnusedEdges.FirstOrDefault(e => (e.StartNode == currentNode && e.EndNode.Name == bestNodeName) || (e.EndNode == currentNode && e.StartNode.Name == bestNodeName));
+        }
+
+        private void MakeAdjacencyMatrix()
+        {
+            AdjacencyMatrix = new int[Nodes.Count][];
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                AdjacencyMatrix[i] = new int[Nodes.Count];
+            }
+            foreach (var edge in Edges)
+            {
+                AdjacencyMatrix[Nodes.IndexOf(edge.StartNode)][Nodes.IndexOf(edge.EndNode)] = edge.Weight;
+                AdjacencyMatrix[Nodes.IndexOf(edge.EndNode)][Nodes.IndexOf(edge.StartNode)] = edge.Weight;
+            }
+        }
+        private void FindMinimumDistances()
+        {
+            for (int k = 0; k < Nodes.Count; ++k)
+            {
+                for (int i = 0; i < Nodes.Count; ++i)
+                {
+                    for (int j = 0; j < Nodes.Count; ++j)
+                    {
+                        //0 - no edge between two nodes
+                        if (i!=j && AdjacencyMatrix[i][k] != 0 && AdjacencyMatrix[k][j] != 0)
+                        {
+                            AdjacencyMatrix[i][j] = Math.Min(AdjacencyMatrix[i][j], AdjacencyMatrix[i][k] + AdjacencyMatrix[k][j]);
+                        }
+                    }
+                }
+            }
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                for (int j = 0; j < Nodes.Count; j++)
+                {
+                    Console.Write(AdjacencyMatrix[i][j] + " ");
+                }
+
+                Console.WriteLine();
+            }
         }
     }
 }
