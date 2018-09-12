@@ -100,10 +100,43 @@ namespace EulerianPath
             });
         }
 
-        //private List<Edge> FindPair()
-        //{
+        private List<Tuple<Node, Node>> FindPair(List<Node> nodes)
+        {
+            Node firstNode = nodes.First();
+            int minWeight = int.MaxValue;
+            List<Tuple<Node, Node>> bestPairs = new List<Tuple<Node, Node>>();
+            Tuple<Node, Node> currentPair;
+            if (nodes.Count == 2)
+            {
+                return new List<Tuple<Node, Node>>() { new Tuple<Node, Node>(firstNode, nodes.Last()) };
+            }
+            foreach (var node in nodes.Skip(1))
+            {
+                currentPair = new Tuple<Node, Node>(firstNode, node);
+                List<Tuple<Node, Node>> newPair = FindPair(nodes.Except(new List<Node>() {node, firstNode}).ToList());
+                int weight =
+                    CalculateWeightOfPairs(newPair);
+                if (weight < minWeight)
+                {
+                    minWeight = weight;
+                    bestPairs = new List<Tuple<Node, Node>>() { currentPair };
+                    bestPairs.AddRange(newPair);
+                }
+            }
 
-        //}
+            return bestPairs;
+        }
+
+        private int CalculateWeightOfPairs(List<Tuple<Node, Node>> pairs)
+        {
+            int sum = 0;
+            foreach (var pair in pairs)
+            {
+                sum += AdjacencyMatrix[Nodes.IndexOf(pair.Item1)][Nodes.IndexOf(pair.Item2)];
+            }
+
+            return sum;
+        }
         public void FindEulerianPath()
         {
             if (!IsEvenDegree())
@@ -112,14 +145,9 @@ namespace EulerianPath
                 MakeAdjacencyMatrix();
                 FindMinimumDistances();
                 var oddDegreeNodes = Nodes.FindAll(n => (n.InEdges.Count + n.OutEdges.Count) % 2 != 0);
-                List<Edge> oddEdges = new List<Edge>();
-                for(int i = 0; i < oddDegreeNodes.Count - 1; i++)
-                {
-                    for (int j = i + 1; j < oddDegreeNodes.Count; j++)
-                    {
-                        oddEdges.Add(new Edge() { StartNode = oddDegreeNodes[i], EndNode = oddDegreeNodes[j], Weight = AdjacencyMatrix[Nodes.IndexOf(oddDegreeNodes[i])][Nodes.IndexOf(oddDegreeNodes[j])]});
-                    }
-                }
+                List<Tuple<Node, Node>> pairs = FindPair(oddDegreeNodes);
+                CreateEdgesBetweenOddDegreeVertexes(pairs);
+                Console.WriteLine(CalculateWeightOfPairs(pairs));
             }
             UsedEdges = new List<Edge>();
             UnusedEdges = new List<Edge>(Edges);
@@ -132,6 +160,21 @@ namespace EulerianPath
                 united = UniteCycles(united, FindCycle(UnusedEdges.First().StartNode));
             }
             united.ForEach(u => Console.WriteLine($"{u.StartNode.Name}, {u.EndNode.Name}"));
+        }
+
+        private void CreateEdgesBetweenOddDegreeVertexes(List<Tuple<Node, Node>> pairs)
+        {
+            int number = 1000;
+            foreach (var pair in pairs)
+            {
+                Edges.Add(new Edge()
+                {
+                    StartNode = pair.Item1,
+                    EndNode = pair.Item2,
+                    Number = number++,
+                    Weight = AdjacencyMatrix[Nodes.IndexOf(pair.Item1)][Nodes.IndexOf(pair.Item2)]
+                });
+            }
         }
         private bool IsEvenDegree()
         {
