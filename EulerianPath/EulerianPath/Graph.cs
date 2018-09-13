@@ -16,6 +16,8 @@ namespace EulerianPath
         public List<Edge> UnusedEdges { get; set; }
         public List<Edge> UsedEdges { get; set; }
         public int[][] AdjacencyMatrix { get; set; }
+        public int[][] RoutesMatrix { get; set; }
+        public int EdgeNumber { get; set; }
         public Graph()
         {
             Nodes = new List<Node>();
@@ -54,7 +56,6 @@ namespace EulerianPath
         {
             FileStream fs = new FileStream(filename, FileMode.Open);
             StreamReader sr = new StreamReader(fs);
-            int edgeNumber = 0;
             while (sr.Peek() >= 0)
             {
                 try
@@ -71,7 +72,7 @@ namespace EulerianPath
 
                     string startNodeName = line[1];
                     string endNodeName = line[2];
-                    AddEdge(++edgeNumber, edgeWeight, startNodeName, endNodeName);
+                    AddEdge(++EdgeNumber, edgeWeight, startNodeName, endNodeName);
                 }
                 catch (Exception e)
                 {
@@ -137,6 +138,7 @@ namespace EulerianPath
 
             return sum;
         }
+
         public void FindEulerianPath()
         {
             if (!IsEvenDegree())
@@ -147,33 +149,49 @@ namespace EulerianPath
                 var oddDegreeNodes = Nodes.FindAll(n => (n.InEdges.Count + n.OutEdges.Count) % 2 != 0);
                 List<Tuple<Node, Node>> pairs = FindPair(oddDegreeNodes);
                 CreateEdgesBetweenOddDegreeVertexes(pairs);
-                Console.WriteLine(CalculateWeightOfPairs(pairs));
             }
+
             UsedEdges = new List<Edge>();
             UnusedEdges = new List<Edge>(Edges);
             //starting from first node in Nodes list
-            var startingEdge = Nodes.First().InEdges.Count > 0 ? Nodes.First().InEdges.First() : Nodes.First().OutEdges.First();
+            var startingEdge = Nodes.First().InEdges.Count > 0
+                ? Nodes.First().InEdges.First()
+                : Nodes.First().OutEdges.First();
             List<Edge> united = new List<Edge>();
             united.AddRange(FindCycle(Nodes.First()));
             while (UnusedEdges.Count > 0)
             {
                 united = UniteCycles(united, FindCycle(UnusedEdges.First().StartNode));
             }
-            united.ForEach(u => Console.WriteLine($"{u.StartNode.Name}, {u.EndNode.Name}"));
+
+            united.ForEach(u => Console.WriteLine($"{u.StartNode.Name}, {u.EndNode.Name} ({u.Weight})"));
+            Console.WriteLine(united.Sum(u => u.Weight));
         }
 
         private void CreateEdgesBetweenOddDegreeVertexes(List<Tuple<Node, Node>> pairs)
         {
-            int number = 1000;
             foreach (var pair in pairs)
+            {
+                CreateEdgeBetweenTwoNodes(Nodes.IndexOf(pair.Item1), Nodes.IndexOf(pair.Item2));
+            }
+        }
+        private void CreateEdgeBetweenTwoNodes(int firstNodeIndex, int secondNodeIndex)
+        {
+            int nextNodeIndex = RoutesMatrix[firstNodeIndex][secondNodeIndex];
+            if (nextNodeIndex == -1)
             {
                 Edges.Add(new Edge()
                 {
-                    StartNode = pair.Item1,
-                    EndNode = pair.Item2,
-                    Number = number++,
-                    Weight = AdjacencyMatrix[Nodes.IndexOf(pair.Item1)][Nodes.IndexOf(pair.Item2)]
+                    StartNode = Nodes[firstNodeIndex],
+                    EndNode = Nodes[secondNodeIndex],
+                    Number = ++EdgeNumber,
+                    Weight = AdjacencyMatrix[firstNodeIndex][secondNodeIndex]
                 });
+            }
+            else
+            {
+                CreateEdgeBetweenTwoNodes(firstNodeIndex, nextNodeIndex);
+                CreateEdgeBetweenTwoNodes(nextNodeIndex, nextNodeIndex);
             }
         }
         private bool IsEvenDegree()
@@ -246,9 +264,16 @@ namespace EulerianPath
         private void MakeAdjacencyMatrix()
         {
             AdjacencyMatrix = new int[Nodes.Count][];
+            RoutesMatrix = new int[Nodes.Count][];
             for (int i = 0; i < Nodes.Count; i++)
             {
+                RoutesMatrix[i] = new int[Nodes.Count];
                 AdjacencyMatrix[i] = new int[Nodes.Count];
+                for (int j = 0; j < Nodes.Count; j++)
+                {
+                    AdjacencyMatrix[i][j] = -1;
+                    RoutesMatrix[i][j] = -1;
+                }
             }
             foreach (var edge in Edges)
             {
@@ -264,19 +289,58 @@ namespace EulerianPath
                 {
                     for (int j = 0; j < Nodes.Count; ++j)
                     {
-                        //0 - no edge between two nodes
-                        if (i!=j && AdjacencyMatrix[i][k] != 0 && AdjacencyMatrix[k][j] != 0)
+                        if (i == j) continue;
+                        //-1 - no edge between two nodes in Adjacency matrix, -1 - there is no one node between two nodes in Routes matrix
+                        if (AdjacencyMatrix[i][k] != -1 && AdjacencyMatrix[k][j] != -1)
                         {
-                            AdjacencyMatrix[i][j] = Math.Min(AdjacencyMatrix[i][j], AdjacencyMatrix[i][k] + AdjacencyMatrix[k][j]);
+                            if (AdjacencyMatrix[i][j] == -1)
+                            {
+                                RoutesMatrix[i][j] = k;
+                                AdjacencyMatrix[i][j] = AdjacencyMatrix[i][k] + AdjacencyMatrix[k][j];
+                            } else if (AdjacencyMatrix[i][k] + AdjacencyMatrix[k][j] < AdjacencyMatrix[i][j])
+                            {
+                                RoutesMatrix[i][j] = k;
+                                AdjacencyMatrix[i][j] = AdjacencyMatrix[i][k] + AdjacencyMatrix[k][j];
+                            }
                         }
                     }
                 }
             }
+            Console.Write("  ");
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                Console.Write(Nodes[i].Name + " ");
+            }
+            Console.WriteLine();
             for (int i = 0; i < Nodes.Count; i++)
             {
                 for (int j = 0; j < Nodes.Count; j++)
                 {
+                    if (j == 0)
+                    {
+                        Console.Write(Nodes[i].Name + " ");
+                    }
                     Console.Write(AdjacencyMatrix[i][j] + " ");
+                }
+
+                Console.WriteLine();
+            }
+
+            Console.Write("\t");
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                Console.Write($"{Nodes[i].Name} {i}\t");
+            }
+            Console.WriteLine();
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                for (int j = 0; j < Nodes.Count; j++)
+                {
+                    if (j == 0)
+                    {
+                        Console.Write(Nodes[i].Name + " " + i + "\t");
+                    }
+                    Console.Write(RoutesMatrix[i][j] + "\t");
                 }
 
                 Console.WriteLine();
