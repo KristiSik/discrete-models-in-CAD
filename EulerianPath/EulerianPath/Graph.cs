@@ -306,45 +306,45 @@ namespace EulerianPath
                     }
                 }
             }
-            Console.Write("  ");
-            for (int i = 0; i < Nodes.Count; i++)
-            {
-                Console.Write(Nodes[i].Name + " ");
-            }
-            Console.WriteLine();
-            for (int i = 0; i < Nodes.Count; i++)
-            {
-                for (int j = 0; j < Nodes.Count; j++)
-                {
-                    if (j == 0)
-                    {
-                        Console.Write(Nodes[i].Name + " ");
-                    }
-                    Console.Write(AdjacencyMatrix[i][j] + " ");
-                }
+            //Console.Write("  ");
+            //for (int i = 0; i < Nodes.Count; i++)
+            //{
+            //    Console.Write(Nodes[i].Name + " ");
+            //}
+            //Console.WriteLine();
+            //for (int i = 0; i < Nodes.Count; i++)
+            //{
+            //    for (int j = 0; j < Nodes.Count; j++)
+            //    {
+            //        if (j == 0)
+            //        {
+            //            Console.Write(Nodes[i].Name + " ");
+            //        }
+            //        Console.Write(AdjacencyMatrix[i][j] + " ");
+            //    }
 
-                Console.WriteLine();
-            }
+            //    Console.WriteLine();
+            //}
 
-            Console.Write("\t");
-            for (int i = 0; i < Nodes.Count; i++)
-            {
-                Console.Write($"{Nodes[i].Name} {i}\t");
-            }
-            Console.WriteLine();
-            for (int i = 0; i < Nodes.Count; i++)
-            {
-                for (int j = 0; j < Nodes.Count; j++)
-                {
-                    if (j == 0)
-                    {
-                        Console.Write(Nodes[i].Name + " " + i + "\t");
-                    }
-                    Console.Write(RoutesMatrix[i][j] + "\t");
-                }
+            //Console.Write("\t");
+            //for (int i = 0; i < Nodes.Count; i++)
+            //{
+            //    Console.Write($"{Nodes[i].Name} {i}\t");
+            //}
+            //Console.WriteLine();
+            //for (int i = 0; i < Nodes.Count; i++)
+            //{
+            //    for (int j = 0; j < Nodes.Count; j++)
+            //    {
+            //        if (j == 0)
+            //        {
+            //            Console.Write(Nodes[i].Name + " " + i + "\t");
+            //        }
+            //        Console.Write(RoutesMatrix[i][j] + "\t");
+            //    }
 
-                Console.WriteLine();
-            }
+            //    Console.WriteLine();
+            //}
         }
     }
 }
