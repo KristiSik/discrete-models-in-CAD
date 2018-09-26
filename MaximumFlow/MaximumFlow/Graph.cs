@@ -137,12 +137,17 @@ namespace MaximumFlow
                 path.Clear();
             } while (!exit);
             InfoService.DisplayEdges(Edges);
+            Console.WriteLine($"Maximum flow: {CalculateMaximumFlow(endNodeName)}");
         }
 
         private void CalculateMinCapacity(List<Edge> path)
         {
             int minCapacity = path.Min(e => e.Capacity - e.Flow);
             path.ForEach(e => e.Flow = e.Flow + minCapacity);
+        }
+        private int CalculateMaximumFlow(string endNodeName)
+        {
+            return Nodes.First(n => n.Name == endNodeName).InEdges.Sum(e => e.Flow);
         }
     }
 }
