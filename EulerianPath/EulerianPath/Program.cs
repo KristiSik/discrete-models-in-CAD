@@ -13,6 +13,8 @@ namespace EulerianPath
             Graph graph = new Graph();
             graph.ReadFromFile("1.dat");
             graph.FindEulerianPath();
+            graph.GenerateJsonFile();
+            graph.RunWebPage();
             Console.ReadKey();
         }
     }

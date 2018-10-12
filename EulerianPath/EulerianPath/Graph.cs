@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 using EulerianPath.Services;
 
 namespace EulerianPath
@@ -15,6 +16,7 @@ namespace EulerianPath
         public List<Edge> Edges { get; set; }
         public List<Edge> UnusedEdges { get; set; }
         public List<Edge> UsedEdges { get; set; }
+        public List<Edge> EulerianPath { get; set; }
         public int[][] AdjacencyMatrix { get; set; }
         public int[][] RoutesMatrix { get; set; }
         public int EdgeNumber { get; set; }
@@ -157,15 +159,15 @@ namespace EulerianPath
             var startingEdge = Nodes.First().InEdges.Count > 0
                 ? Nodes.First().InEdges.First()
                 : Nodes.First().OutEdges.First();
-            List<Edge> united = new List<Edge>();
-            united.AddRange(FindCycle(Nodes.First()));
+            EulerianPath = new List<Edge>();
+            EulerianPath.AddRange(FindCycle(Nodes.First()));
             while (UnusedEdges.Count > 0)
             {
-                united = UniteCycles(united, FindCycle(UnusedEdges.First().StartNode));
+                EulerianPath = UniteCycles(EulerianPath, FindCycle(UnusedEdges.First().StartNode));
             }
 
-            united.ForEach(u => Console.WriteLine($"{u.StartNode.Name}, {u.EndNode.Name} ({u.Weight})"));
-            Console.WriteLine(united.Sum(u => u.Weight));
+            EulerianPath.ForEach(u => Console.WriteLine($"{u.StartNode.Name}, {u.EndNode.Name} ({u.Weight})"));
+            Console.WriteLine(EulerianPath.Sum(u => u.Weight));
         }
 
         private void CreateEdgesBetweenOddDegreeVertexes(List<Tuple<Node, Node>> pairs)
@@ -306,6 +308,7 @@ namespace EulerianPath
                     }
                 }
             }
+
             //Console.Write("  ");
             //for (int i = 0; i < Nodes.Count; i++)
             //{
@@ -345,6 +348,27 @@ namespace EulerianPath
 
             //    Console.WriteLine();
             //}
+        }
+        public void GenerateJsonFile()
+        {
+            JsonResult jr = new JsonResult();
+            Nodes.ForEach(n => {
+                n.InEdges.Clear();
+                n.OutEdges.Clear();
+            });
+            jr.Edges = Edges;
+            jr.Nodes = Nodes;
+            jr.EulerianPath = EulerianPath;
+            JavaScriptSerializer jsonSerializer = new JavaScriptSerializer();
+            using (StreamWriter sw = new StreamWriter("result.json"))
+            {
+                sw.Write(jsonSerializer.Serialize(jr));
+            }
+        }
+
+        public void RunWebPage()
+        {
+            System.Diagnostics.Process.Start("CMD.exe", "/C reload -b");
         }
     }
 }
