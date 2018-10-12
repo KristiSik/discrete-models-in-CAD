@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 using MinimumSpanningTree.Services;
 
 namespace MinimumSpanningTree
@@ -13,6 +15,9 @@ namespace MinimumSpanningTree
     {
         public List<Node> Nodes { get; set; }
         public List<Edge> Edges { get; set; }
+        private List<Edge> minimumSpanningTree = new List<Edge>();
+        private List<Edge> maximumSpanningTree = new List<Edge>();
+        
         public Graph()
         {
             Nodes = new List<Node>();
@@ -99,7 +104,6 @@ namespace MinimumSpanningTree
         public void FindMinimumSpanningTree()
         {
             List<Node> usedNodes = new List<Node> {Nodes.First()};
-            List<Edge> minimumSpanningTree = new List<Edge>();
             while (usedNodes.Count < Nodes.Count)
             {
                 Edge edgeWithMinimumWeight = null;
@@ -142,7 +146,6 @@ namespace MinimumSpanningTree
         public void FindMaximumSpanningTree()
         {
             List<Node> usedNodes = new List<Node> { Nodes.First() };
-            List<Edge> maximumSpanningTree = new List<Edge>();
             while (usedNodes.Count < Nodes.Count)
             {
                 Edge edgeWithMaximumWeight = null;
@@ -180,6 +183,27 @@ namespace MinimumSpanningTree
                 maximumSpanningTree.Add(edgeWithMaximumWeight);
             }
             InfoService.DisplayEdges(maximumSpanningTree);
+        }
+        public void GenerateJsonFile()
+        {
+            JsonResult jr = new JsonResult();
+            Nodes.ForEach(n => {
+                n.InEdges.Clear();
+                n.OutEdges.Clear();
+            });
+            jr.Edges = Edges;
+            jr.Nodes = Nodes;
+            jr.MinimumSpanningTree = minimumSpanningTree;
+            jr.MaximumSpanningTree = maximumSpanningTree;
+            JavaScriptSerializer jsonSerializer = new JavaScriptSerializer();
+            using (StreamWriter sw = new StreamWriter("result.json"))
+            {
+                sw.Write(jsonSerializer.Serialize(jr));
+            }
+        }
+        public void RunWebPage()
+        {
+            System.Diagnostics.Process.Start("CMD.exe", "/C reload -b");
         }
     }
 }

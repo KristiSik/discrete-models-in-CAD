@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization.Json;
 
 namespace MinimumSpanningTree
 {
@@ -11,6 +12,8 @@ namespace MinimumSpanningTree
             graph.PrintNodes();
             graph.FindMinimumSpanningTree();
             graph.FindMaximumSpanningTree();
+            graph.GenerateJsonFile();
+            graph.RunWebPage();
             Console.ReadKey();
         }
     }
